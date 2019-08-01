@@ -1,6 +1,13 @@
 const express =require('express');
+
+const Joi = require('joi');
 const router  = express.Router() ;
 
+
+const schema = Joi.object().keys({
+  username: Joi.string().regex(/(^[a-zA-Z0-9_]*$)/).min(2).max(30).required(),
+  password: Joi.string().min(10).required()
+});
 
 
 router.get('/' ,(req,res) => {
@@ -10,10 +17,9 @@ router.get('/' ,(req,res) => {
 });
 
 router.post('/signup', (req,res) => {
-  console.log('body',req.body)
- res.json({
-   message : "You Are Awesome!!!"
-  });
+  const result = Joi.validate(req.body,schema);
+ res.json(result);
 });
 
 module.exports = router ;
+
