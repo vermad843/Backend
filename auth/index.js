@@ -1,6 +1,14 @@
 const express =require('express');
-
 const Joi = require('joi');
+const bcrypt =require('bcryptjs');
+
+const database = require('../database/connection.js');
+const users = database.get('users');
+
+users.createIndex('username' , {unique : true});
+
+
+
 const router  = express.Router() ;
 
 
@@ -16,9 +24,24 @@ router.get('/' ,(req,res) => {
   }); 
 });
 
-router.post('/signup', (req,res) => {
+router.post('/signup', (req,res,next) => {
   const result = Joi.validate(req.body,schema);
- res.json(result);
+  if(result.error === null) {
+    users.findOne({
+      username : req.body.username 
+    }).then((user) => {
+      if(user) {
+       const error = new Error('this username is unavailable');
+       next(error);
+      }else {
+        bcrypt.hash(req.body.password,12).then((hashedPassword) => {
+         res.json({hashedPassword});
+        });
+      }
+    });
+  }else {
+   next(result.error);
+  }
 });
 
 module.exports = router ;
